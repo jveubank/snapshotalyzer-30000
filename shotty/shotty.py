@@ -1,4 +1,5 @@
 import boto3
+import botocore
 import click
 
 session = boto3.Session(profile_name='shotty')
@@ -86,7 +87,7 @@ def create_snapshots(project):
 
         for v in i.volumes.all():
             print("  Creating snapshot for {0}".format(v.id))
-            v.create_snapshots(Description="Created by SnapshotAlyer 30000")
+            v.create_snapshot(Description="Created by SnapshotAlyer 30000")
 
         print("Starting {0} ...".format(i.id))
 
@@ -126,7 +127,12 @@ def stop_instances(project):
 
     for i in instances:
         print("Stopping {0} ...".format(i.id))
-        i.stop()
+        try:
+            i.stop()
+        except botocore.exceptions.ClientError as e:
+            print("Could not stop {0} ".format(i.id) + str(e))
+            continue
+
     return
 
 @instances.command('start')
@@ -139,7 +145,12 @@ def start_instances(project):
 
     for i in instances:
         print("Starting {0} ...".format(i.id))
-        i.start()
+        try:
+            i.start()
+        except botocore.exceptions.ClientError as e:
+            print("Could not start {0} ".format(i.id) + str(e))
+            continue
+
     return
 
 if __name__ == '__main__':
